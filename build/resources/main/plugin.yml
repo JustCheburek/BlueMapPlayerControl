@@ -1,5 +1,5 @@
 name: BlueMapPlayerControl
-version: '${project.version}'
+version: '1.6'
 main: com.technicjelle.bluemapplayercontrol.BlueMapPlayerControl
 folia-supported: true
 api-version: 1.13
