@@ -17,12 +17,12 @@ commands:
 
 permissions:
   bmpc:
-    default: true
+    default: false
   bmpc.*:
     default: op
     children:
       bmpc.self:
-        default: true
+        default: op
         children:
           bmpc.self.toggle: true
           bmpc.self.show: true
@@ -34,11 +34,11 @@ permissions:
           bmpc.others.show: true
           bmpc.others.hide: true
   bmpc.self.toggle:
-    default: true
+    default: op
   bmpc.self.show:
-    default: true
+    default: op
   bmpc.self.hide:
-    default: true
+    default: op
   bmpc.others.toggle:
     default: op
   bmpc.others.show:
