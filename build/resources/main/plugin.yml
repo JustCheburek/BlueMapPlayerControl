@@ -1,0 +1,47 @@
+name: BlueMapPlayerControl
+version: '1.6'
+main: com.technicjelle.bluemapplayercontrol.BlueMapPlayerControl
+folia-supported: true
+api-version: 1.13
+depend:
+  - BlueMap
+author: TechnicJelle
+description: Adds player hiding functionality to BlueMap
+website: https://github.com/TechnicJelle/BlueMapPlayerControl
+
+commands:
+  bmpc:
+    usage: /<command> [hide | show] [player]
+    description: Toggles visibility on BlueMap
+    permission: bmpc
+
+permissions:
+  bmpc:
+    default: true
+  bmpc.*:
+    default: op
+    children:
+      bmpc.self:
+        default: op
+        children:
+          bmpc.self.toggle: true
+          bmpc.self.show: true
+          bmpc.self.hide: true
+      bmpc.others:
+        default: op
+        children:
+          bmpc.others.toggle: true
+          bmpc.others.show: true
+          bmpc.others.hide: true
+  bmpc.self.toggle:
+    default: op
+  bmpc.self.show:
+    default: op
+  bmpc.self.hide:
+    default: op
+  bmpc.others.toggle:
+    default: op
+  bmpc.others.show:
+    default: op
+  bmpc.others.hide:
+    default: op
