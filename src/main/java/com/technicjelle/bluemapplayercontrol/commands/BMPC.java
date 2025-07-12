@@ -1,8 +1,9 @@
 package com.technicjelle.bluemapplayercontrol.commands;
 
+import com.technicjelle.bluemapplayercontrol.BlueMapPlayerControl;
+import com.technicjelle.bluemapplayercontrol.Config;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,7 +19,12 @@ import java.util.UUID;
 @SuppressWarnings("UnstableApiUsage")
 public class BMPC implements CommandExecutor, TabCompleter {
 
-	public BMPC() {
+	private final BlueMapPlayerControl plugin;
+	private final Config config;
+
+	public BMPC(BlueMapPlayerControl plugin) {
+		this.plugin = plugin;
+		this.config = plugin.getPluginConfig();
 	}
 
 	@Override
@@ -30,6 +36,10 @@ public class BMPC implements CommandExecutor, TabCompleter {
 			if (sender instanceof Player player) { // only players can self
 				UUID senderUUID = player.getUniqueId();
 				if (args.length == 0) {
+					if (!selfAllowed(sender)) {
+						sender.sendMessage(config.getSelfNoPermissionMessage());
+						return true;
+					}
 					//toggle
 					if (api.getWebApp().getPlayerVisibility(senderUUID)) {
 						hideSelf(api, sender, senderUUID);
@@ -40,28 +50,36 @@ public class BMPC implements CommandExecutor, TabCompleter {
 				}
 				if (args.length == 1) {
 					if (args[0].equalsIgnoreCase("show")) {
+						if (!selfAllowed(sender)) {
+							sender.sendMessage(config.getSelfNoPermissionMessage());
+							return true;
+						}
 						showSelf(api, sender, senderUUID);
 						return true;
 					} else if (args[0].equalsIgnoreCase("hide")) {
+						if (!selfAllowed(sender)) {
+							sender.sendMessage(config.getSelfNoPermissionMessage());
+							return true;
+						}
 						hideSelf(api, sender, senderUUID);
 						return true;
 					}
 				}
 			} else {
 				if (args.length == 0) {
-					sender.sendMessage(ChatColor.RED + "You must be a player to hide yourself");
+					sender.sendMessage(config.getMustBePlayerMessage());
 					return true;
 				}
 			}
 
 			// === OTHER ===
 			if (!othersAllowed(sender)) {
-				sender.sendMessage(ChatColor.RED + "You are don't have permission to change the visibility of others");
+				sender.sendMessage(config.getOthersNoPermissionMessage());
 			} else {
 				String targetName = args[args.length - 1];
 				List<Entity> targets = Bukkit.selectEntities(sender, targetName);
 				if (targets.isEmpty()) {
-					sender.sendMessage(ChatColor.YELLOW + "Player \"" + targetName + "\" not found");
+					sender.sendMessage(config.getPlayerNotFoundMessage(targetName));
 					return true;
 				}
 				for (Entity target : targets) {
@@ -86,32 +104,34 @@ public class BMPC implements CommandExecutor, TabCompleter {
 		return false;
 	}
 
-	private static void showSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
+	private void showSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
 		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, true);
-		sender.sendMessage("You are now " + ChatColor.AQUA + "visible" + ChatColor.RESET + " on the map");
+		sender.sendMessage(config.getSelfVisibleMessage());
 	}
 
-	private static void hideSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
+	private void hideSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
 		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, false);
-		sender.sendMessage("You are now " + ChatColor.GOLD + "invisible" + ChatColor.RESET + " on the map");
+		sender.sendMessage(config.getSelfInvisibleMessage());
 	}
 
-	private static void showOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
+	private void showOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), true);
-		sender.sendMessage(targetPlayer.getDisplayName() + " is now " + ChatColor.AQUA + "visible" + ChatColor.RESET + " on the map");
+		sender.sendMessage(config.getOthersVisibleMessage(targetPlayer.getDisplayName()));
 	}
 
-	private static void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
+	private void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), false);
-		sender.sendMessage(targetPlayer.getDisplayName() + " is now " + ChatColor.GOLD + "invisible" + ChatColor.RESET + " on the map");
+		sender.sendMessage(config.getOthersInvisibleMessage(targetPlayer.getDisplayName()));
 	}
 
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
 		List<String> completions = new ArrayList<>();
 		if (args.length == 1) {
-			completions.add("show");
-			completions.add("hide");
+			if (selfAllowed(sender)) {
+				completions.add("show");
+				completions.add("hide");
+			}
 			if (othersAllowed(sender)) {
 				for (Player player : sender.getServer().getOnlinePlayers()) {
 					completions.add(player.getName());
@@ -135,6 +155,10 @@ public class BMPC implements CommandExecutor, TabCompleter {
 			}
 		}
 		return completions;
+	}
+
+	private boolean selfAllowed(CommandSender sender) {
+		return sender.isOp() || sender.hasPermission("bmpc.self");
 	}
 
 	private boolean othersAllowed(CommandSender sender) {

@@ -14,10 +14,14 @@ commands:
     usage: /<command> [hide | show] [player]
     description: Toggles visibility on BlueMap
     permission: bmpc
+  bmpcreload:
+    usage: /<command>
+    description: Перезагружает конфигурацию плагина
+    permission: bmpc.reload
 
 permissions:
   bmpc:
-    default: false
+    default: op
   bmpc.*:
     default: op
     children:
@@ -33,6 +37,7 @@ permissions:
           bmpc.others.toggle: true
           bmpc.others.show: true
           bmpc.others.hide: true
+      bmpc.reload: true
   bmpc.self.toggle:
     default: op
   bmpc.self.show:
@@ -44,4 +49,6 @@ permissions:
   bmpc.others.show:
     default: op
   bmpc.others.hide:
+    default: op
+  bmpc.reload:
     default: op
